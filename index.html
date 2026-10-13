@@ -21,11 +21,11 @@ main{padding:0 18px 18px}
 .wrap{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:16px;background:var(--card);border:2px solid #2f5fa8;border-radius:0 12px 12px 12px;padding:14px}
 @media (max-width:820px){.wrap{grid-template-columns:1fr}}
 svg.board{width:100%;height:auto;max-height:78vh;touch-action:none;user-select:none;background:#fcfdff;border:1px solid var(--line);border-radius:10px}
-.handle{cursor:grab;outline:none}.handle:active{cursor:grabbing}.anglbl.big{font-size:26px}
+.handle,.handle *{cursor:grab}.handle{outline:none}.handle:active{cursor:grabbing}.anglbl.big{font-size:26px}
 .hint{font-weight:700;color:#a0186f;font-size:1.05rem;margin:6px 0 2px}
 .handle:focus .ring{stroke:#111;stroke-width:3;stroke-dasharray:4 3}
 .handle .hit{fill:transparent}
-.ptlabel{font-weight:700;font-size:24px;paint-order:stroke;stroke:#fff;stroke-width:5px}
+.ptlabel,.anglbl{pointer-events:none}.ptlabel{font-weight:700;font-size:24px;paint-order:stroke;stroke:#fff;stroke-width:5px}
 .anglbl{font-size:20px;font-weight:700;paint-order:stroke;stroke:#fff;stroke-width:4px}
 .panel h2{font-size:1.05rem;margin:4px 0 6px;color:#1f3b73}
 .read{display:grid;grid-template-columns:1fr;gap:6px;font-size:1.25rem}
@@ -60,7 +60,7 @@ footer{font-size:.82rem;color:var(--mute);padding:4px 18px 16px}
 </head>
 <body>
 <header>
-  <div><h1>圓心角兩倍於圓周角</h1><div class="sub">中三／中四・圓的性質　|　馬Sir教室</div></div>
+  <div><h1>圓心角兩倍於圓周角</h1><div class="sub"><span id="ver" style="background:#ffd166;color:#1f3b73;border-radius:6px;padding:0 6px;font-weight:700">版本 1.2</span>　中三／中四・圓的性質　|　馬Sir教室</div></div>
   <div class="score" id="score">分數：0　連勝：0</div>
 </header>
 <nav class="modes" role="tablist">
@@ -74,7 +74,7 @@ footer{font-size:.82rem;color:var(--mute);padding:4px 18px 16px}
     <div class="legend"><span style="background:var(--red)"></span>被對住的弧 AB<span style="background:var(--blue)"></span>圓心角<span style="background:var(--green)"></span>圓周角<span style="background:var(--orange)"></span>輔助線</div>
     <div class="hint">👆 拖動 A、B、C 試吓！角度會即時跟住變（拖 O 可移動整個圓）</div>
     <div class="note">小提示：只拖 C 而不越過 A、B 時，∠ACB 保持不變（同弧上的圓周角相等），只有標示位置跟住移；拖 A 或 B 角度就會變。</div>
-    <div class="btns"><label>半徑 <input type="range" id="rad" min="120" max="230" value="215" aria-label="半徑"></label><button id="resetBtn">重設</button></div>
+    <div class="btns"><label>半徑 <input type="range" id="rad" min="120" max="230" value="160" aria-label="半徑"></label><button id="resetBtn">重設</button></div>
     <div class="note">拖動 A、B、C、O（滑鼠／觸控）；亦可按 Tab 揀點，再用 ← → 鍵移動（Shift＝5°）。</div>
   </div>
   <div class="panel">
@@ -163,7 +163,7 @@ function compute(tA,tB,tC){
 }
 
 // ---------- drawing ----------
-var CX=300,CY=300,R=215;var BASE_R=215;
+var CX=300,CY=300,R=215;var BASE_R=215,DEF_R=160;
 function S(p){return [CX+R*p.x,CY-R*p.y];}
 function SP(P,r,t){return [P[0]+r*Math.cos(t*D2R),P[1]-r*Math.sin(t*D2R)];}
 function arcD(P,r,t0,delta,wedge){ // P screen point, math angles
@@ -183,7 +183,7 @@ function draw(svg,st,opt){
   opt=opt||{};CX=st.ox||300;CY=st.oy||300;R=st.r||BASE_R;
   while(svg.firstChild)svg.removeChild(svg.firstChild);
   var c=compute(st.a,st.b,st.c),O=[CX,CY],A=S(c.A),B=S(c.B),C=S(c.C),Dd=S(c.D);
-  var g=el('g',{});svg.appendChild(g);
+  var g=el('g',{'pointer-events':'none'});svg.appendChild(g);
   g.appendChild(el('circle',{cx:CX,cy:CY,r:R,fill:'none',stroke:'#334',"stroke-width":2.5}));
   // other arc faint, subtended arc red
   g.appendChild(el('path',{d:arcD(O,R,c.arcStart,c.arcSpan),fill:'none',stroke:'#d62828','stroke-width':8,'stroke-linecap':'round',opacity:.9}));
@@ -212,9 +212,9 @@ function draw(svg,st,opt){
     var q2=SP(O,rc+26,c.arcStart+c.arcSpan/2);g.appendChild(el('text',{x:q2[0],y:q2[1]+7,'text-anchor':'middle',fill:'#1f6fd1',class:'anglbl big'},f0(c.aob)+'°'));}
   }
   var oh=el('g',{class:opt.interactive?'handle':'','data-p':'o',tabindex:opt.interactive?0:-1,'aria-label':'圓心 O（拖動可移動整個圓）'});
-  if(opt.interactive)oh.appendChild(el('circle',{class:'hit',cx:CX,cy:CY,r:28}));
-  oh.appendChild(el('circle',{class:'ring',cx:CX,cy:CY,r:opt.interactive?8:5,fill:'#111',stroke:'#fff','stroke-width':2}));
-  oh.appendChild(el('text',{x:CX+12,y:CY+26,fill:'#111',class:'ptlabel'},'O'));svg.appendChild(oh);
+  if(opt.interactive){oh.appendChild(el('circle',{class:'hit',cx:CX,cy:CY,r:40}));oh.appendChild(el('circle',{cx:CX,cy:CY,r:20,fill:'#111','fill-opacity':.08,stroke:'#111','stroke-width':2,'stroke-dasharray':'5 4'}));}
+  oh.appendChild(el('circle',{class:'ring',cx:CX,cy:CY,r:opt.interactive?9:5,fill:'#111',stroke:'#fff','stroke-width':2}));
+  oh.appendChild(el('text',{x:CX+12,y:CY+26,fill:'#111',class:'ptlabel'},'O'));
   [['A',st.a,A],['B',st.b,B],['C',st.c,C]].forEach(function(p){
     var h=el('g',{class:'handle','data-p':p[0].toLowerCase(),tabindex:opt.interactive?0:-1,role:opt.interactive?'slider':'img','aria-label':'點 '+p[0]+'，'+Math.round(n360(p[1]))+'°'});
     if(opt.interactive)h.appendChild(el('circle',{class:'hit',cx:p[2][0],cy:p[2][1],r:34}));
@@ -222,13 +222,14 @@ function draw(svg,st,opt){
     var L=SP(O,R+28,p[1]);h.appendChild(el('text',{x:L[0],y:L[1]+8,'text-anchor':'middle',fill:'#111',class:'ptlabel'},p[0]));
     svg.appendChild(h);
   });
+  svg.appendChild(oh);
   if(opt.extra)opt.extra(svg,c);
   return c;
 }
 
 // ---------- explorer state ----------
 var PRE={in:{a:200,b:340,c:95},side:{a:215,b:330,c:35},out:{a:300,b:350,c:200},reflex:{a:205,b:335,c:270},diam:{a:180,b:0,c:120}};
-var st={a:200,b:340,c:95,ox:300,oy:300,r:215},proofOn=false,lastReflex=false;
+var st={a:200,b:340,c:95,ox:300,oy:300,r:DEF_R},proofOn=false,lastReflex=false;
 var board=document.getElementById('board');
 function snap(st,key){
   var others=key==='c'?['a','b']:['c'];
@@ -298,7 +299,7 @@ board.addEventListener('keydown',function(e){var h=e.target.closest('.handle');i
   var nh=board.querySelector('.handle[data-p="'+k+'"]');if(nh)nh.focus();});
 document.querySelectorAll('[data-preset]').forEach(function(b){b.addEventListener('click',function(){var p=PRE[b.dataset.preset];st={a:p.a,b:p.b,c:p.c,ox:st.ox,oy:st.oy,r:st.r};render();});});
 document.getElementById('rad').addEventListener('input',function(e){var s=cp();s.r=+e.target.value;clampO(s);st=s;render();});
-document.getElementById('resetBtn').addEventListener('click',function(){st={a:200,b:340,c:95,ox:300,oy:300,r:215};document.getElementById('rad').value=215;render();});
+document.getElementById('resetBtn').addEventListener('click',function(){st={a:200,b:340,c:95,ox:300,oy:300,r:DEF_R};document.getElementById('rad').value=DEF_R;render();});
 document.getElementById('proofToggle').addEventListener('change',function(e){proofOn=e.target.checked;render();});
 
 // ---------- challenges ----------
